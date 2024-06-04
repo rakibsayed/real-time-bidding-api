@@ -1,0 +1,136 @@
+const { Server } = require("http");
+const ioClient = require("socket.io-client");
+const request = require("supertest");
+const app = require("../app");
+const { Bid, Item, User } = require("../models");
+const jwt = require("jsonwebtoken");
+const { createMockUser, createMockItem } = require("../testUtils/mockData");
+const { startSocketServer } = require("../websocket");
+
+describe("Bid Controller with Websocket", () => {
+  let server;
+  let io;
+  let clientSocket;
+  let ownerToken;
+  let itemId;
+  let ownerId;
+  let itemCurrentBid;
+
+  beforeAll(async () => {
+    await User.sync({ force: true });
+    await Item.sync({ force: true });
+    await Bid.sync({ force: true });
+
+    // Create a mock owner user and item for testing
+    const owner = await createMockUser({
+      username: "TestOwner1",
+      email: "owner@email.com",
+    });
+    ownerToken = jwt.sign(
+      { id: owner.id, username: owner.username },
+      process.env.JWT_SECRET
+    );
+    ownerId = owner.id;
+
+    const item = await createMockItem(ownerId);
+    itemId = item.id;
+    itemCurrentBid = parseFloat(item.current_price);
+  });
+
+  beforeEach(async () => {
+    await Bid.destroy({ where: {} });
+  });
+
+  afterAll(async () => {
+    await Bid.destroy({ where: {} });
+    await Item.destroy({ where: {} });
+    await User.destroy({ where: {} });
+  });
+
+  // Getting all bids for a specific item
+  describe("GET /items/:itemId/bids", () => {
+    it("should return all bids for a specific item", async () => {
+      // Create a mock item with a bid
+      const bid = await Bid.create({
+        bid_amount: 20,
+        bidder_id: 1,
+        item_id: itemId,
+      });
+      // Make a GET request to fetch all bids for the item
+      const res = await request(app).get(`/items/${itemId}/bids`);
+
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+
+      // Check if the response body contains the created bid
+      const receivedBid = res.body.find(
+        (receivedBid) => receivedBid.id === bid.id
+      );
+      expect(receivedBid).toBeTruthy();
+    });
+  });
+
+  // Placing a bid and also testing if a bid got higher to notify the user in real time
+  describe("POST /items/:itemId/bids", () => {
+    it("should create a new bid", async () => {
+      // Start the server
+      server = Server(app);
+      io = startSocketServer(server);
+
+      // Start listening on a specific port
+      const TEST_PORT = process.env.TEST_PORT || 4000; // Use a different port for testing
+      await new Promise((resolve) => {
+        server.listen(TEST_PORT, () => {
+          // Connect the client socket to the server
+          clientSocket = ioClient(`http://localhost:${TEST_PORT}`);
+          clientSocket.on("connect", () => {
+            expect(clientSocket.connected).toBeTruthy();
+            resolve();
+          });
+        });
+      });
+
+      // Create a mock bidder user for testing
+      const bidder = await createMockUser({
+        username: "TestBidder1",
+        email: "bidder@email.com",
+      });
+      const bidderToken = jwt.sign(
+        { id: bidder.id, username: bidder.username },
+        process.env.JWT_SECRET
+      );
+      
+      const newBidAmount = itemCurrentBid + 20; // Make sure the new bid is higher than the current bid
+      // Listen for "update" event from the server
+      await new Promise((resolve) => {
+        clientSocket.on("bid_update", async (data) => {
+          try {
+            // Verify that the server received the bid event and processed it
+            expect(data).toHaveProperty("itemId");
+            expect(data).toHaveProperty("bidAmount");
+            expect(data).toHaveProperty("userId");
+            expect(data).toHaveProperty("message");
+            resolve();
+          } catch (error) {
+            done(error);
+          }
+        });
+
+        // Send a POST request to place a new bid
+        request(app)
+          .post(`/items/${itemId}/bids`)
+          .set("Authorization", `Bearer ${bidderToken}`)
+          .send({ bidAmount: newBidAmount })
+          .expect(201)
+          .end((err) => {
+            if (err) resolve(err);
+          });
+      });
+
+      // Close the client socket and server
+      clientSocket.close();
+      io.close();
+      server.close();
+    }, 5000); // Increase timeout to 5 seconds
+  });
+});

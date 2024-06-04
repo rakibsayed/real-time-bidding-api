@@ -1,0 +1,15 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore .env file (contains sensitive information)
+.env
+
+# Ignore log files
+*.log
+
+# Ignore uploads directory (if it contains user-uploaded files)
+uploads/
+
+# Ignore any files generated during the build process
+/build/
+/dist/
