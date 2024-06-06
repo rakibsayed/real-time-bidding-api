@@ -8,7 +8,7 @@ This project is a comprehensive RESTful API for a real-time bidding platform bui
 
 1. Install Node.js (https://nodejs.org/)
 
-2. Clone the repository: `git clone https://github.com/rakibsayed/real-time-bidding.git`
+2. Clone the repository: `git clone https://github.com/rakibsayed/real-time-bidding-api.git`
 
 3. Install dependencies:
 
@@ -48,6 +48,7 @@ npm test
 #### POST /users/register
 
 **Description:** Register a new user.
+
 **Request Body:**
 
 ```json
@@ -89,6 +90,7 @@ npm test
 #### POST /users/login
 
 **Description:** Login User.
+
 **Request Body:**
 
 ```json
@@ -123,6 +125,7 @@ npm test
 #### GET /users/profile
 
 **Description:** Get the profile of the logged-in user.
+
 **Authorization:** Bearer token in the Authorization header.
 
 **Response:**
@@ -162,25 +165,25 @@ npm test
   - **Body:**
 
   ```json
-   {
-   "totalItems": "Total No. of Items",
-   "totalPages": "Total No. of Pages",
-   "currentPage": "Current Page No",
-   "items": [
-   {
-   "id": 1,
-   "name": "Item Name",
-   "description": "Item Description",
-   "starting_price": 100.0,
-   "current_price": 150.0,
-   "image_url": "http://example.com/image.jpg",
-   "end_time": "2024-06-06T12:00:00Z",
-   "created_at": "2024-06-01T12:00:00Z",
-   "owner_id": 1
-   },
-   ...
-   ]
-   }
+  {
+    "totalItems": "Total No. of Items",
+    "totalPages": "Total No. of Pages",
+    "currentPage": "Current Page No",
+    "items": [
+      {
+        "id": 1,
+        "name": "Item Name",
+        "description": "Item Description",
+        "starting_price": 100.0,
+        "current_price": 150.0,
+        "image_url": "http://example.com/image.jpg",
+        "end_time": "2024-06-06T12:00:00Z",
+        "created_at": "2024-06-01T12:00:00Z",
+        "owner_id": 1
+      }
+      //...
+    ]
+  }
   ```
 
 - **Error:**
@@ -228,6 +231,7 @@ npm test
 #### POST /items
 
 **Description:** Create a new auction item. (Authenticated users, image upload)
+
 **Authorization:** Bearer token in the Authorization header.
 
 **Request Body:**
@@ -274,6 +278,7 @@ npm test
 #### PUT /items/:itemId
 
 **Description:** Create a new auction item. (Authenticated users, Access Control ,image upload)
+
 **Authorization:** Bearer token in the Authorization header.
 
 **Request Body:**
@@ -339,6 +344,7 @@ npm test
 #### DELETE /items/:itemId
 
 **Description:** Create a new auction item. (Authenticated users, Access Control ,image upload)
+
 **Authorization:** Bearer token in the Authorization header.
 
 **Request Body:**
@@ -411,10 +417,10 @@ npm test
         "id": 1,
         "item_id": 1,
         "bidder_id": 1,
-        "bid_amount": 150.00,
+        "bid_amount": 150.0,
         "created_at": "2024-06-02T12:00:00Z"
-      },
-      ...
+      }
+      //...
     ]
     ```
 
@@ -490,6 +496,7 @@ npm test
 #### GET /notifictaions
 
 **Description:** Retrieve notifications for the logged-in user.
+
 **Authorization:** Bearer token in the Authorization header.
 
 **Response:**
@@ -501,13 +508,13 @@ npm test
     ```json
     [
       {
-      "id": 1,
-      "user_id": 1,
-      "message": "You have been outbid on 'Item Name'.",
-      "is_read": false,
-      "created_at": "2024-06-02T12:45:00Z"
-      },
-    ...
+        "id": 1,
+        "user_id": 1,
+        "message": "You have been outbid on 'Item Name'.",
+        "is_read": false,
+        "created_at": "2024-06-02T12:45:00Z"
+      }
+      //...
     ]
     ```
 
@@ -523,6 +530,7 @@ npm test
 #### POST /notifications/mark-read
 
 **Description:** Mark notifications as read.
+
 **Authorization:** Bearer token in the Authorization header.
 
 **Request Body:**
@@ -562,7 +570,6 @@ OR
     {
       "error": "Access Denied."
     }
-    ``
     ```
   - **Status Code:** 400 (Bad Request)
   - **Body:**
@@ -588,3 +595,28 @@ OR
       "error": "No unread notifications found with the provided IDs."
     }
     ```
+
+## Socket.io Client Setup
+
+**Connect to the Real-Time API Bidding server using the Socket.IO client library.**
+```javascript
+// Import the socket.io-client library
+const io = require("socket.io-client");
+
+// Specify the URL of the server
+const serverUrl = "http://your-server-hostname:your-server-port";
+
+// Connect to the server
+const socket = io(serverUrl);
+
+// Notify when the connection is established
+socket.on("connect", () => {
+  console.log("Connected to the Real-Time API Bidding server.");
+});
+
+// Listen for bid update events
+socket.on("bid_update", (data) => {
+  console.log("Received bid update:", data);
+  // Handle the bid update here
+});
+```

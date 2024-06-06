@@ -42,7 +42,6 @@ describe("Notification Controller", () => {
 
   describe("POST /notifications/mark-read", () => {
     it("should mark notication as read", async () => {
-      console.log(notifications);
       const res = await request(app)
         .post("/notifications/mark-read")
         .set("Authorization", `Bearer ${token}`)

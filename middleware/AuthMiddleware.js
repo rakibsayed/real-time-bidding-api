@@ -21,7 +21,6 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).send("Access denied. Invalid token.");
     }
     
-    console.log("HEllllllll: ", user.id);
     // Attach the user information to the request object
     req.user = { id: user.id, username: user.username };
 

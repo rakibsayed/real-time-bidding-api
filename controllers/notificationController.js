@@ -36,9 +36,6 @@ exports.markAsRead = async (req, res) => {
     }
     
     // Update notifications
-    console.log(idsArray , req.user.id);
-    const notification = await Notification.findAll({})
-    console.log(notification);
     const [updatedCount] = await Notification.update(
       { is_read: true },
       {
@@ -51,7 +48,6 @@ exports.markAsRead = async (req, res) => {
     );
     
     if (updatedCount === 0) {
-      console.log(idsArray , req.user.id);
       return res
       .status(404)
         .json({ error: "No unread notifications found with the provided IDs" });
