@@ -4,7 +4,8 @@ const { Notification, User } = require("../models");
 const jwt = require("jsonwebtoken");
 const path = require("path");
 const fs = require("fs");
-const { createMockUser, createMockItem } = require("../testUtils/mockData");
+const { createMockUser} = require("../testUtils/mockData");
+const { successSymbol, errorSymbol } = require("../utils/consoleSymbols");
 
 describe("Notification Controller", () => {
   let token;
@@ -31,7 +32,7 @@ describe("Notification Controller", () => {
   });
 
   describe("GET /notifications", () => {
-    it("should return all notification of current user", async () => {
+    it("should return all notifications of the current user", async () => {
       const res = await request(app)
         .get("/notifications")
         .set("Authorization", `Bearer ${token}`);
@@ -41,7 +42,7 @@ describe("Notification Controller", () => {
   });
 
   describe("POST /notifications/mark-read", () => {
-    it("should mark notication as read", async () => {
+    it("should mark notification as read", async () => {
       const res = await request(app)
         .post("/notifications/mark-read")
         .set("Authorization", `Bearer ${token}`)

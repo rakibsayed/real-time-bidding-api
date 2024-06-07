@@ -1,8 +1,13 @@
 const socketIo = require("socket.io");
-const NotificationService = require("./services/NotificationService");
+const { infoSymbol, errorSymbol } = require("./utils/consoleSymbols");
 
 let io;
-// Initialize WebSocket server
+
+/**
+ * Initializes the WebSocket server.
+ * @param {Object} server - The HTTP server object.
+ * @returns {Object} - The initialized Socket.IO instance.
+ */
 function startSocketServer(server) {
   try {
     // Create Socket.IO instance and attach it to the provided server
@@ -10,23 +15,24 @@ function startSocketServer(server) {
 
     // Handle new client connections
     io.on("connection", (socket) => {
-      console.log("New client connected");
+      console.log(infoSymbol, "New client connected");
 
       // Handle client disconnections
       socket.on("disconnect", () => {
-        console.log("Client disconnected");
+        console.log(infoSymbol, "Client disconnected");
       });
     });
 
     // Handle WebSocket server errors
     io.on("error", (error) => {
-      console.error("WebSocket server error:", error);
+      console.error(errorSymbol, "WebSocket server error:", error);
       // Handling specific types of errors here, such as unauthorized access or server crashes
     });
 
     return io;
   } catch (error) {
     console.error(
+      errorSymbol,
       "Error occurred during WebSocket server initialization:",
       error
     );
@@ -35,6 +41,13 @@ function startSocketServer(server) {
   }
 }
 
+/**
+ * Emits a bid event to all connected clients.
+ * @param {Object} params - The parameters containing bid information.
+ * @param {string} params.itemId - The ID of the item being bid on.
+ * @param {string} params.userId - The ID of the user placing the bid.
+ * @param {number} params.bidAmount - The amount of the bid.
+ */
 function emitBidEvent({ itemId, userId, bidAmount }) {
   if (!io) {
     throw new Error("WebSocket server is not initialized");

@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const path = require("path");
 const fs = require("fs");
 const { createMockUser, createMockItem } = require("../testUtils/mockData");
-
+const { errorSymbol, successSymbol } = require('../utils/consoleSymbols');
 
 describe("Item Controller", () => {
   let token;
@@ -28,20 +28,17 @@ describe("Item Controller", () => {
     await Item.destroy({ where: {} });
     await User.destroy({ where: {} });
 
-    // Cleaning Up all uploaded testing images
-    // Directory where the uploaded images are stored
     const uploadDir = path.join(__dirname, "..", "uploads");
-    // Get a list of all files in the directory
-    const files = fs.readdirSync(uploadDir);
-
-    // Filter files that match the pattern "-test.*"
-    const testFiles = files.filter((file) => /-test\..+$/.test(file));
-
-    // Delete each test file
-    testFiles.forEach((file) => {
-      const filePath = path.join(uploadDir, file);
-      fs.unlinkSync(filePath);
-    });
+    if (fs.existsSync(uploadDir)) {
+      const files = fs.readdirSync(uploadDir);
+      const testFiles = files.filter((file) => /-test\..+$/.test(file));
+      testFiles.forEach((file) => {
+        const filePath = path.join(uploadDir, file);
+        fs.unlinkSync(filePath);
+      });
+    } else {
+      console.log("Upload directory does not exist. Skipping cleanup.");
+    }
   });
 
   describe("GET /items?page=1&limit=10", () => {
@@ -108,7 +105,6 @@ describe("Item Controller", () => {
 
   describe("PUT /items/:id", () => {
     it("should update an existing item", async () => {
-      // Create a mock item in the database
       const item = await createMockItem();
       const itemId = item.id;
 
@@ -136,7 +132,6 @@ describe("Item Controller", () => {
 
   describe("DELETE /items/:id", () => {
     it("should delete an existing item", async () => {
-      // Create a mock item in the database
       const item = await createMockItem();
       const itemId = item.id;
 

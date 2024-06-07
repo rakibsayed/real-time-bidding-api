@@ -1,17 +1,19 @@
 const { User, Notification, Bid } = require("../models");
+const { errorSymbol } = require('../utils/consoleSymbols');
 
 exports.notifyNewBid = async (itemId, userId, bidAmount) => {
   try {
-    // Fetch previous bids
+    // Fetch previous highest bid
     const previousBids = await Bid.findAll({
       where: { item_id: itemId },
       order: [["bid_amount", "DESC"]],
-      offset: 1, // First Bid Will be Latest User Bid So Need to Skip That
+      offset: 1, // Skip the first bid, which is the latest user bid
       limit: 1,
     });
 
     const previousHighestBid = previousBids[0];
 
+    // Notify the outbid user if there was a previous highest bid
     if (previousHighestBid) {
       const outbidUser = await User.findByPk(previousHighestBid.bidder_id);
       if (outbidUser) {
@@ -24,12 +26,12 @@ exports.notifyNewBid = async (itemId, userId, bidAmount) => {
           recipientId: notification.user_id,
         };
       } else {
-        console.error("Outbid user not found");
+        console.error(`${errorSymbol} Outbid user not found`);
       }
     }
 
+    // Notify the item owner if there was no previous highest bid
     const itemOwner = await User.findByPk(userId);
-
     if (itemOwner) {
       const notification = await Notification.create({
         user_id: itemOwner.id,
@@ -40,9 +42,9 @@ exports.notifyNewBid = async (itemId, userId, bidAmount) => {
         recipientId: notification.user_id,
       };
     } else {
-      console.error("Item owner not found");
+      console.error(`${errorSymbol} Item owner not found`);
     }
   } catch (error) {
-    console.error("Error processing bid notification:", error);
+    console.error(`${errorSymbol} Error processing bid notification:`, error);
   }
 };

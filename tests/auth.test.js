@@ -3,6 +3,7 @@ const app = require("../app");
 const { User } = require("../models");
 const bcrypt = require("bcryptjs");
 const { createMockUser } = require("../testUtils/mockData");
+const { errorSymbol, successSymbol } = require('../utils/consoleSymbols');
 
 describe("Auth Controller", () => {
   beforeEach(async () => {
@@ -18,6 +19,7 @@ describe("Auth Controller", () => {
         password: hashedPassword,
         email: "test@example.com",
       });
+      console.log(`${successSymbol} User registered successfully`);
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty("user");
     });
@@ -35,6 +37,7 @@ describe("Auth Controller", () => {
         password: hashedPassword,
         email: "duplicate@example.com",
       });
+      console.error(`${errorSymbol} Registration failed: Email already exists`);
       expect(res.statusCode).toBe(400);
     });
   });
@@ -49,6 +52,7 @@ describe("Auth Controller", () => {
         email: "login@example.com",
         password: "testpassword",
       });
+      console.log(`${successSymbol} User logged in successfully`);
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty("token");
     });
@@ -58,6 +62,7 @@ describe("Auth Controller", () => {
         email: "invalid@example.com",
         password: "wrongpassword",
       });
+      console.error(`${errorSymbol} Login failed: Invalid credentials`);
       expect(res.statusCode).toBe(400);
     });
   });
